@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Training tracker
 
-## Getting Started
+An AI-native training tracker. Log a workout without fighting a form, see whether you're
+actually trending toward your goal, and — if you'd rather not use a form at all — just type
+what you did and let the app structure it.
 
-First, run the development server:
+Built as a portfolio piece for senior/lead frontend work, which means the reasoning is part
+of the deliverable: see [`docs/design.md`](docs/design.md) for goals, non-goals, rejected
+alternatives, risks, and the phased rollout, and [`docs/adr/`](docs/adr/) for the decisions
+that were load-bearing enough to write down.
+
+> **Status:** Phase 0 (design + backlog). No application code yet — by design.
+
+## The three pillars
+
+| | What it demonstrates |
+|---|---|
+| **Quick-add entry flow** | Production form UX: per-step validation, autosave, no data loss on back-navigation, optimistic submit with retry, EN/ES |
+| **Trend dashboard** | Recharts time series with a goal reference line and 7d/30d/90d range selection — built and tested in isolation before it was wired into anything |
+| **AI extraction** | Free text → structured entries via a streamed Next API route to the Anthropic Messages API, behind a feature flag, with a deterministic fallback |
+
+## Craft bar
+
+Non-negotiable, and the actual point of the project:
+
+- Every async surface has real **empty / loading / error / retry** states.
+- **Keyboard-navigable and screen-reader-usable** — including the chart, which pairs a visual
+  series with an off-screen data table.
+- **Responsive to mobile**, designed phone-first.
+- The **AI feature is flag-gated** for staged rollout, and degrades to local parsing rather
+  than breaking.
+
+## Stack
+
+Next.js (App Router) · TypeScript · Tailwind · Recharts · Vitest · Playwright · Storybook ·
+`next-intl` · IndexedDB behind a repository interface · Anthropic Messages API · Vercel
+
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The app runs fully without an API key — the AI feature is flag-gated, and its fallback path
+requires no network.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Environment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Copy `.env.example` to `.env.local`:
 
-## Learn More
+| Variable | Required | Notes |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | For live AI only | Server-only. Never commit it; never prefix it `NEXT_PUBLIC_` |
+| `ANTHROPIC_MODEL` | No | Defaults to `claude-opus-5` |
+| `NEXT_PUBLIC_FEATURE_AI` | No | Defaults off. On → live extraction; off → deterministic local fallback |
 
-To learn more about Next.js, take a look at the following resources:
+## Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Command | |
+|---|---|
+| `npm run dev` | Dev server |
+| `npm run build` | Production build |
+| `npm run lint` | ESLint |
+| `npm run test` | Vitest _(added in Phase 1)_ |
+| `npm run test:e2e` | Playwright _(added in v1)_ |
+| `npm run storybook` | Storybook _(added in Phase 1)_ |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project docs
 
-## Deploy on Vercel
+- [`docs/design.md`](docs/design.md) — problem, goals, non-goals, alternatives, risks, rollout
+- [`docs/backlog.md`](docs/backlog.md) — the epic, broken into v0/v1/stretch with sequencing rationale
+- [`docs/adr/0001-local-first-persistence.md`](docs/adr/0001-local-first-persistence.md)
+- [`docs/adr/0002-recharts-for-the-trend-chart.md`](docs/adr/0002-recharts-for-the-trend-chart.md)
+- [`docs/adr/0003-ai-extraction-route.md`](docs/adr/0003-ai-extraction-route.md)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Build phases
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Phase 0** — design doc, ADRs, backlog. _(current)_
+- **Phase 1** — trend chart in isolation: Storybook stories + Vitest tests + all four states.
+- **Phase 2** — app shell: entry flow + dashboard consuming the chart.
+- **Phase 3** — the AI route: streaming, structured extraction, full error/retry UX.
+
+## Known limitations
+
+Stated plainly rather than discovered by a user:
+
+- Data lives in one browser profile. No accounts, no sync, no cross-device continuity — see
+  ADR-0001 for why, and for the seam that makes changing it a contained job.
+- Clearing site data deletes everything. CSV export is stretch scope.
+- Rate limiting is in-memory and therefore per-instance — a speed bump, not a guarantee.
