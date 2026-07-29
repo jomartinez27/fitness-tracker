@@ -9,6 +9,13 @@ import {
   encodeEvent,
   type ExtractEvent,
 } from "@/lib/ai/protocol";
+import {
+  GLOBAL_KEY,
+  clientKey,
+  globalModelCallLimiter,
+  modelCallLimiter,
+  requestLimiter,
+} from "@/lib/ai/rate-limit";
 
 /**
  * Free-text → structured sessions, streamed.
@@ -41,6 +48,19 @@ function jsonError(code: string, status: number) {
 }
 
 export async function POST(request: Request) {
+  const caller = clientKey(request.headers);
+
+  // Resource guard first: a caller this far past the limit is not using the
+  // product, and should not get free CPU for parsing either. Refused before the
+  // body is even read.
+  const hard = requestLimiter.take(caller);
+  if (!hard.allowed) {
+    return Response.json(
+      { error: "rate_limited" },
+      { status: 429, headers: { "retry-after": String(hard.retryAfterSeconds) } },
+    );
+  }
+
   let body: unknown;
   try {
     body = await request.json();
@@ -73,7 +93,21 @@ export async function POST(request: Request) {
       // hiding a button does not stop anyone POSTing to a public URL. Off means
       // no upstream call and therefore no spend, while the endpoint keeps
       // answering usefully.
-      if (!serverFlags.aiRoute) {
+      //
+      // The spend guard sits alongside it and behaves identically, because both
+      // answer the same question — "should this request cost money?" — and a
+      // user who simply typed quickly deserves a working feature rather than an
+      // error page explaining our budget.
+      //
+      // Both limiters are consulted because they fail differently: the
+      // per-caller one keeps any single user from monopolising the budget, and
+      // the global one is the ceiling that still holds when the caller identity
+      // itself is being spoofed.
+      const withinBudget =
+        modelCallLimiter.take(caller).allowed &&
+        globalModelCallLimiter.take(GLOBAL_KEY).allowed;
+
+      if (!serverFlags.aiRoute || !withinBudget) {
         fallback();
         controller.close();
         return;

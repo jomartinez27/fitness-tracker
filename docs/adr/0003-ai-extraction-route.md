@@ -37,7 +37,8 @@ module that constructs an SDK client. Model is `ANTHROPIC_MODEL`, defaulting to
 | Layer | Control |
 |---|---|
 | Kill switch | `NEXT_PUBLIC_FEATURE_AI=false` hides the UI; the route independently checks its own server-side flag and answers from the local extractor (see the amendment below) |
-| Rate limit | Per-IP token bucket, small burst, low sustained rate; on trip → mock, not an error |
+| Spend limit | Per-IP token bucket (5 burst, ~5/min) **and** an unkeyed instance-wide ceiling (~30/min); on trip → mock, not an error |
+| Request limit | Per-IP, ~60/min, checked before the body is read; on trip → `429` with `Retry-After` |
 | Input cap | Request body length capped before the model call |
 | Output cap | `max_tokens` bounded per request |
 | Timeout | Server aborts the upstream stream past a fixed wall-clock budget |
@@ -154,7 +155,31 @@ ever sees real traffic — but that is a capability-for-cost trade to make
 deliberately, not a default to quietly downgrade. The lever now works, so it is
 one environment variable away.
 
-**6. The route guarantees exactly one terminal event.** A stream that ends after
+**6. Per-IP rate limiting alone cannot bound spend — a global limiter is
+required.** Writing the limiter surfaced a hole in the control this ADR
+originally described.
+
+A per-key limiter must bound its key map, or the map itself becomes a
+memory-exhaustion vector: keys come from a client-supplied header, so anyone can
+mint unlimited ones. But once the map is bounded, a flood of unique keys forces
+evictions — and no eviction policy reliably spares the attacker's own bucket.
+Oldest-first evicts exactly the callers being limited. Fullest-first is better,
+and still loses when every bucket is near empty. **Any keyed limiter with finite
+memory has this hole**, which makes per-IP limiting a fairness mechanism rather
+than a spend ceiling.
+
+So the route also consults a limiter keyed by nothing at all. There is nothing to
+spray at it. It cannot deliver fairness — a flood exhausts it and pushes
+legitimate users onto the local extractor too — but that is the right way to
+fail: everyone keeps a working feature and the bill stops.
+
+The two are complementary and neither is redundant: per-IP stops one user
+monopolising the budget under normal conditions; global holds when the identity
+is fake. Neither survives a cold start, and both are per-instance — the durable
+version is #31, and the absolute ceiling remains the credit balance on the
+account.
+
+**7. The route guarantees exactly one terminal event.** A stream that ends after
 prose without ever calling the tool throws nothing and looks like success, so a
 fallback that only runs in `catch` leaves the client waiting forever for data
 that is never coming. The guarantee lives in `finally`, keyed on whether an

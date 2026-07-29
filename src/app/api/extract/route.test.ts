@@ -15,11 +15,17 @@ vi.mock("@/lib/flags", () => ({ serverFlags: flags, publicFlags: { ai: true } })
 vi.mock("@/lib/ai/anthropic-extract", () => ({ streamAnthropicExtraction }));
 
 const { POST } = await import("./route");
+const {
+  modelCallLimiter,
+  globalModelCallLimiter,
+  requestLimiter,
+} = await import("@/lib/ai/rate-limit");
 
-const post = (body: unknown) =>
+const post = (body: unknown, ip = "203.0.113.1") =>
   POST(
     new Request("http://localhost/api/extract", {
       method: "POST",
+      headers: { "x-vercel-forwarded-for": ip },
       body: typeof body === "string" ? body : JSON.stringify(body),
     }),
   );
@@ -59,6 +65,10 @@ const RUN: ExtractedEntry = {
 beforeEach(() => {
   flags.aiRoute = true;
   streamAnthropicExtraction.mockReset();
+  // Limiters are module singletons that persist across requests by design.
+  modelCallLimiter.reset();
+  globalModelCallLimiter.reset();
+  requestLimiter.reset();
 });
 
 describe("POST /api/extract — request validation", () => {
@@ -176,6 +186,74 @@ describe("POST /api/extract — degrading instead of breaking", () => {
 
     const entries = entriesEvent(await readEvents(await post({ text: "rest day" })));
     expect(entries).toMatchObject({ source: "ai", entries: [] });
+  });
+
+  it("serves the local extractor once a caller exhausts the model budget", async () => {
+    // A 429 here would punish a keen user for a control that exists to protect
+    // us. They keep a working feature; we stop paying for it.
+    streamAnthropicExtraction.mockImplementation(() =>
+      yields({ type: "entries", entries: [RUN], source: "ai" } as ExtractEvent),
+    );
+
+    const sources: string[] = [];
+    for (let i = 0; i < 8; i += 1) {
+      const events = await readEvents(await post({ text: "ran 5k" }));
+      sources.push(entriesEvent(events)!.source);
+    }
+
+    expect(sources.slice(0, 5)).toEqual(Array(5).fill("ai"));
+    expect(sources.slice(5)).toEqual(Array(3).fill("ai-fallback"));
+    expect(streamAnthropicExtraction).toHaveBeenCalledTimes(5);
+  });
+
+  it("gives each caller their own budget", async () => {
+    streamAnthropicExtraction.mockImplementation(() =>
+      yields({ type: "entries", entries: [RUN], source: "ai" } as ExtractEvent),
+    );
+
+    for (let i = 0; i < 5; i += 1) await readEvents(await post({ text: "ran 5k" }, "1.1.1.1"));
+    const exhausted = await readEvents(await post({ text: "ran 5k" }, "1.1.1.1"));
+    const other = await readEvents(await post({ text: "ran 5k" }, "2.2.2.2"));
+
+    expect(entriesEvent(exhausted)?.source).toBe("ai-fallback");
+    expect(entriesEvent(other)?.source).toBe("ai");
+  });
+
+  it("stops spending when the instance-wide ceiling is reached, whatever the caller claims to be", async () => {
+    // The control that survives a spoofed address: spraying keys defeats a
+    // per-caller limit, but there is nothing to spray at an unkeyed one.
+    streamAnthropicExtraction.mockImplementation(() =>
+      yields({ type: "entries", entries: [RUN], source: "ai" } as ExtractEvent),
+    );
+
+    const sources: string[] = [];
+    for (let i = 0; i < 70; i += 1) {
+      const events = await readEvents(await post({ text: "ran 5k" }, `10.0.0.${i}`));
+      sources.push(entriesEvent(events)!.source);
+    }
+
+    // 60 global tokens, so the tail falls back despite every request arriving
+    // from a fresh address with a full per-caller bucket.
+    expect(sources.filter((source) => source === "ai")).toHaveLength(60);
+    expect(sources.at(-1)).toBe("ai-fallback");
+  });
+
+  it("refuses outright far above the budget, and says when to come back", async () => {
+    // Past this point a caller is not using the product, and free CPU and
+    // bandwidth are their own denial of service.
+    let last: Response | undefined;
+    for (let i = 0; i < 62; i += 1) last = await post({ text: "ran 5k" });
+
+    expect(last!.status).toBe(429);
+    expect(Number(last!.headers.get("retry-after"))).toBeGreaterThan(0);
+    await expect(last!.json()).resolves.toEqual({ error: "rate_limited" });
+  });
+
+  it("refuses before reading the body, so a flood costs no parsing", async () => {
+    for (let i = 0; i < 61; i += 1) await post({ text: "ran 5k" });
+    const response = await post("this is not valid json at all");
+    // Malformed body would be a 400 if it had been parsed.
+    expect(response.status).toBe(429);
   });
 
   it("always terminates with exactly one entries event", async () => {

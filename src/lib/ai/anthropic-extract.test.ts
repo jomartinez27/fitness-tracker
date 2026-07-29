@@ -90,6 +90,29 @@ describe("streamAnthropicExtraction — request shape", () => {
     expect(streamMock.mock.calls[0][0]).not.toHaveProperty("thinking");
   });
 
+  it("caps output tokens on every request", async () => {
+    // The per-request spend ceiling (ADR-0003). Without it a pathological input
+    // could bill for a very long response before anything else notices.
+    streamMock.mockImplementation(() => okStream());
+    await collect("ran 5k", "claude-opus-5");
+    const { max_tokens } = streamMock.mock.calls[0][0];
+    expect(max_tokens).toBeGreaterThan(0);
+    expect(max_tokens).toBeLessThanOrEqual(2000);
+  });
+
+  it("passes the abort signal through so the route's timeout can bite", async () => {
+    streamMock.mockImplementation(() => okStream());
+    const controller = new AbortController();
+    for await (const _ of streamAnthropicExtraction("ran 5k", {
+      today: "2026-07-28",
+      model: "claude-opus-5",
+      signal: controller.signal,
+    })) {
+      void _;
+    }
+    expect(streamMock.mock.calls[0][1]).toMatchObject({ signal: controller.signal });
+  });
+
   it("does not call the API at all for blank input", async () => {
     const events = await collect("   ");
     expect(streamMock).not.toHaveBeenCalled();
