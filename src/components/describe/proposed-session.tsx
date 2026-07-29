@@ -52,27 +52,29 @@ export function ProposedSession({
         <span className="text-sm font-semibold">{entry.activity}</span>
 
         <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-2">
-          <Fact
-            value={date}
-            inferred={isInferred("date")}
-            label={t("assumedDate")}
-            explanation={t("estimatedExplanation")}
-          />
+          <Fact value={date} inferred={isInferred("date")} label={t("assumedDate")} />
           <Fact
             value={`${entry.durationMin} min`}
             inferred={isInferred("durationMin")}
             label={t("estimated")}
-            explanation={t("estimatedExplanation")}
           />
           {entry.distanceKm !== undefined ? (
             <Fact
               value={`${entry.distanceKm} km`}
               inferred={isInferred("distanceKm")}
               label={t("estimated")}
-              explanation={t("estimatedExplanation")}
             />
           ) : null}
         </span>
+
+        {/*
+          Once per session, not once per badge. A row with both an assumed date
+          and an estimated duration otherwise reads the identical sentence twice
+          to a screen reader — the badges already differ by their own labels.
+        */}
+        {entry.inferred.length > 0 ? (
+          <span className="sr-only">{t("estimatedExplanation")}</span>
+        ) : null}
       </label>
     </li>
   );
@@ -82,12 +84,10 @@ function Fact({
   value,
   inferred,
   label,
-  explanation,
 }: {
   value: string;
   inferred: boolean;
   label: string;
-  explanation: string;
 }) {
   if (!inferred) return <span>{value}</span>;
 
@@ -102,7 +102,6 @@ function Fact({
       <span className="rounded border border-line px-1.5 py-0.5 text-xs text-ink-muted">
         {label}
       </span>
-      <span className="sr-only">{explanation}</span>
     </span>
   );
 }

@@ -29,5 +29,14 @@ export default defineConfig({
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
+    env: {
+      // The AI surface is visible…
+      NEXT_PUBLIC_FEATURE_AI: "true",
+      // …but the route never calls the model, so extraction runs through the
+      // deterministic local parser. This is what makes the AI end-to-end tests
+      // free, key-less and repeatable — the reason #20 was built before #21.
+      // The model path itself is covered by the opt-in live contract tests.
+      FEATURE_AI_ROUTE: "false",
+    },
   },
 });
