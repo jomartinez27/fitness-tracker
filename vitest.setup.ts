@@ -15,6 +15,10 @@ afterEach(cleanup);
  * promise. Visual correctness is Storybook's job, not jsdom's.
  */
 beforeAll(() => {
+  // Some suites opt into `@vitest-environment node` (the Anthropic SDK refuses
+  // to run anywhere browser-like). There is no DOM to patch there.
+  if (typeof HTMLElement === "undefined") return;
+
   const BOX = { width: 800, height: 400 };
 
   class ResizeObserverStub implements ResizeObserver {

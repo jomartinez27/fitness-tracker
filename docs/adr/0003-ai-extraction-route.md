@@ -121,7 +121,40 @@ input is read once, whole, at the end. This is what makes the two-channel claim
 real rather than aspirational — there is no point at which anything parses a
 partial JSON object.
 
-**4. The route guarantees exactly one terminal event.** A stream that ends after
+**4. `ANTHROPIC_MODEL` was not actually configurable.** The requirement is that
+the model is an env-var lever. It wasn't: the request always sent
+`output_config.effort`, and models that don't support it fail the whole call
+with a 400. Pointing the var at Haiku 4.5 meant *every* request silently served
+the local fallback while the deployment was still billed as a live model —
+worse than an outright error, because it looks like it works.
+
+Fixed by retrying once without `effort` on that specific 400 and remembering the
+model, so the penalty is paid once per process. Learned from the API rather than
+hardcoded, since a capability list goes stale the next time the lineup moves.
+
+**5. Measured, rather than assumed, model choice.** With the lever working, all
+three candidates were run against the #20 contract and timed (median of 3–4;
+`"ran 5k, 30 min yoga"`):
+
+| model | first text | total | cost/call | contract | weekday fixture |
+|---|---|---|---|---|---|
+| Opus 5 (`effort: low`) | 2.7s | 8.0s | $0.0083 | 9/9 | 4/4 |
+| Sonnet 5 (`effort: low`) | 1.7s | 3.5s | $0.0044 | 9/9 | 4/4 |
+| Haiku 4.5 | 1.1s | 1.9s | $0.0015 | 8/9 | **1/4** |
+
+Haiku is ruled out on evidence, not on instinct: it resolves "monday: 40 min row"
+to *today* three times in four, and reports `inferred: []` — claiming it read a
+date it in fact guessed wrong. Relative dates are the core of "type your week
+naturally", not an edge case, and a wrong answer arriving four times faster is
+still wrong.
+
+Opus 5 stays the default. Sonnet 5 matched it on every contract fixture at half
+the latency and half the cost, which makes it the obvious candidate if the demo
+ever sees real traffic — but that is a capability-for-cost trade to make
+deliberately, not a default to quietly downgrade. The lever now works, so it is
+one environment variable away.
+
+**6. The route guarantees exactly one terminal event.** A stream that ends after
 prose without ever calling the tool throws nothing and looks like success, so a
 fallback that only runs in `catch` leaves the client waiting forever for data
 that is never coming. The guarantee lives in `finally`, keyed on whether an

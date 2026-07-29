@@ -153,51 +153,103 @@ export interface AnthropicExtractOptions {
   maxTokens?: number;
 }
 
+/**
+ * Models observed to reject `effort`, remembered for the life of the process.
+ *
+ * `ANTHROPIC_MODEL` is meant to be a real deployment lever — the way to trade
+ * capability for latency and cost without a code change. It wasn't: the request
+ * always sent `output_config.effort`, and models that don't support it (Haiku
+ * 4.5 among them) fail the whole call with a 400. Every request would have
+ * silently fallen back to the local extractor while still being billed as an
+ * Opus deployment.
+ *
+ * Learning it from the API beats hardcoding a capability list, which would be
+ * wrong again the next time the model lineup moves.
+ */
+const modelsRejectingEffort = new Set<string>();
+
+function isUnsupportedEffortError(error: unknown): boolean {
+  return (
+    error instanceof Anthropic.APIError &&
+    error.status === 400 &&
+    /effort/i.test(String(error.message))
+  );
+}
+
 export async function* streamAnthropicExtraction(
   text: string,
   { today, signal, model, maxTokens = 1500 }: AnthropicExtractOptions,
 ): AsyncGenerator<ExtractEvent, void> {
+  // The API rejects empty user content with a 400, so blank input would surface
+  // as an upstream failure and quietly fall back — paying a round trip to learn
+  // what we already know. The route rejects empty text before reaching here;
+  // this keeps the extractor honest when called directly, and keeps it and the
+  // mock answering the same contract.
+  if (!text.trim()) {
+    yield { type: "entries", entries: [], source: "ai" };
+    return;
+  }
+
   // Constructed per request rather than at module scope so a missing key is a
   // request-time failure the fallback absorbs, not a boot-time crash.
   const client = new Anthropic();
+  const resolvedModel = model ?? process.env.ANTHROPIC_MODEL ?? DEFAULT_MODEL;
 
-  const stream = client.messages.stream(
-    {
-      model: model ?? process.env.ANTHROPIC_MODEL ?? DEFAULT_MODEL,
-      max_tokens: maxTokens,
-      system: systemPrompt(today),
-      // Extraction is a shallow task and this is on a user-facing latency path;
-      // low effort keeps thinking brief. Adaptive thinking stays on — disabling
-      // it on this model tier is the documented cause of tool calls being
-      // written as plain prose, which would silently produce zero entries.
-      output_config: { effort: "low" },
-      tools: [RECORD_SESSIONS_TOOL],
-      messages: [{ role: "user", content: text }],
-    },
-    { signal },
-  );
+  let streamed = false;
 
-  for await (const event of stream) {
-    if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-      yield { type: "summary_delta", text: event.delta.text };
+  async function* attempt(withEffort: boolean): AsyncGenerator<ExtractEvent, void> {
+    const stream = client.messages.stream(
+      {
+        model: resolvedModel,
+        max_tokens: maxTokens,
+        system: systemPrompt(today),
+        tools: [RECORD_SESSIONS_TOOL],
+        messages: [{ role: "user", content: text }],
+        // Extraction is a shallow task on a user-facing latency path, so
+        // thinking is kept brief. It is not switched off: disabling thinking on
+        // this model tier is the documented cause of tool calls being written
+        // as plain prose, and this route depends entirely on the tool being
+        // called — the failure mode would be a silent zero entries every time.
+        ...(withEffort ? { output_config: { effort: "low" as const } } : {}),
+      },
+      { signal },
+    );
+
+    for await (const event of stream) {
+      if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+        streamed = true;
+        yield { type: "summary_delta", text: event.delta.text };
+      }
     }
+
+    const message = await stream.finalMessage();
+
+    const toolUse = message.content.find(
+      (block): block is Anthropic.ToolUseBlock =>
+        block.type === "tool_use" && block.name === TOOL_NAME,
+    );
+    if (!toolUse) {
+      throw new ExtractionUnavailableError("model did not call the tool");
+    }
+
+    // The summary is not repeated here — the client already has it, accumulated
+    // from the `summary_delta` events it rendered as they arrived.
+    yield {
+      type: "entries",
+      entries: toEntries(toolUse.input, today),
+      source: "ai",
+    };
   }
 
-  const message = await stream.finalMessage();
-
-  const toolUse = message.content.find(
-    (block): block is Anthropic.ToolUseBlock =>
-      block.type === "tool_use" && block.name === TOOL_NAME,
-  );
-  if (!toolUse) {
-    throw new ExtractionUnavailableError("model did not call the tool");
+  try {
+    yield* attempt(!modelsRejectingEffort.has(resolvedModel));
+  } catch (error) {
+    // The rejection arrives with the initial response, before any token is
+    // streamed, so retrying cannot duplicate prose the user already saw. The
+    // `streamed` guard makes that a checked assumption rather than a hoped-for
+    // one.
+    if (streamed || !isUnsupportedEffortError(error)) throw error;
+    modelsRejectingEffort.add(resolvedModel);
+    yield* attempt(false);
   }
-
-  // The summary is not repeated here — the client already has it, accumulated
-  // from the `summary_delta` events it rendered as they arrived.
-  yield {
-    type: "entries",
-    entries: toEntries(toolUse.input, today),
-    source: "ai",
-  };
 }
