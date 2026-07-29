@@ -1,0 +1,110 @@
+{
+  "app": {
+    "name": "Training tracker",
+    "tagline": "Log a session without fighting a form.",
+    "skipToContent": "Skip to main content",
+    "nav": {
+      "label": "Main",
+      "dashboard": "Trend",
+      "log": "Log a session"
+    }
+  },
+  "storage": {
+    "unavailableTitle": "Changes won't be saved",
+    "unavailableBody": "This browser is blocking local storage, so anything you log will disappear when you close the tab. Private browsing is the usual cause."
+  },
+  "dashboard": {
+    "heading": "Your trend",
+    "metricLabel": "Metric",
+    "empty": {
+      "title": "Nothing logged yet",
+      "body": "Log your first session and your trend starts here.",
+      "cta": "Log a session"
+    }
+  },
+  "chart": {
+    "distanceTitle": "Distance",
+    "distanceDescription": "Kilometres per day",
+    "durationTitle": "Duration",
+    "durationDescription": "Minutes per day",
+    "sessionsTitle": "Sessions",
+    "sessionsDescription": "Sessions per day",
+    "rangeGroupLabel": "Time range",
+    "range7d": "7 days",
+    "range30d": "30 days",
+    "range90d": "90 days",
+    "emptyNoDataTitle": "No sessions logged yet",
+    "emptyNoDataBody": "Log your first session and your trend will start building here.",
+    "emptyInRangeTitle": "Nothing in this range",
+    "emptyInRangeBody": "You have sessions logged, just none in this window. Try a longer range.",
+    "errorTitle": "Couldn't load your trend",
+    "errorBody": "Your data is safe — this is a display problem, not a lost session.",
+    "retry": "Try again",
+    "loading": "Loading your trend",
+    "tableCaption": "session data as a table",
+    "columnDate": "Date",
+    "columnValue": "Total",
+    "goal": "Goal {target}",
+    "summaryWithGoal": "{points} days shown. Total {total}, averaging {average} per day. Goal is {goal} per day.",
+    "summary": "{points} days shown. Total {total}, averaging {average} per day."
+  },
+  "metric": {
+    "distanceKm": "Distance",
+    "durationMin": "Duration",
+    "sessions": "Sessions"
+  },
+  "entry": {
+    "heading": "Log a session",
+    "stepProgress": "Step {current} of {total}",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Save session",
+    "saving": "Saving…",
+    "draftRestored": "We restored your unsaved session.",
+    "discardDraft": "Start over",
+    "steps": {
+      "whatLabel": "What did you do?",
+      "whenLabel": "When?",
+      "effortLabel": "How much?",
+      "notesLabel": "Anything to note?"
+    },
+    "fields": {
+      "activity": "Activity",
+      "activityHint": "For example: Run, Yoga, Strength",
+      "date": "Date",
+      "durationMin": "Duration",
+      "durationUnit": "minutes",
+      "distanceKm": "Distance",
+      "distanceUnit": "kilometres",
+      "distanceOptional": "Optional — leave blank for activities you don't measure in distance",
+      "notes": "Notes",
+      "notesOptional": "Optional"
+    },
+    "errors": {
+      "summaryTitle": "Fix these before continuing",
+      "activityRequired": "Give the session a name so you'll recognise it later.",
+      "activityTooLong": "Keep the name under 80 characters.",
+      "dateRequired": "Pick the day this session happened.",
+      "dateInFuture": "That date is in the future.",
+      "durationRequired": "Enter how long the session lasted.",
+      "durationInvalid": "Enter a whole number of minutes.",
+      "durationTooLong": "That's longer than a day.",
+      "distanceInvalid": "Enter a distance like 5 or 5.2.",
+      "notesTooLong": "Keep notes under 500 characters."
+    },
+    "review": {
+      "heading": "Ready to save",
+      "editStep": "Edit"
+    },
+    "success": {
+      "title": "Session saved",
+      "body": "It's on your trend now.",
+      "another": "Log another"
+    },
+    "failure": {
+      "title": "Couldn't save that session",
+      "body": "Nothing was lost — your entry is still here. Try again when you're ready.",
+      "retry": "Try again"
+    }
+  }
+}

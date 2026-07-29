@@ -28,7 +28,9 @@
   border-radius: 0.75rem;
   background: var(--viz-surface);
   color: var(--viz-text-primary);
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Self-contained default so the chart looks right standalone in Storybook;
+     the app sets --viz-font so the two share one typeface. */
+  font-family: var(--viz-font, system-ui, -apple-system, "Segoe UI", sans-serif);
 }
 
 /* The media query covers the OS setting; the data-theme scope covers an explicit

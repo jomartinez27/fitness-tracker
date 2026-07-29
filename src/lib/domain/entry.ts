@@ -45,18 +45,38 @@ export const entrySchema = z.object({
 export type Entry = z.infer<typeof entrySchema>;
 
 /**
- * A draft is every field optional — it is persisted mid-typing, so it is by
- * definition incomplete. This is the type that makes "no data loss on
- * back-navigation" (#15) possible: drafts are storage, not React state.
+ * A draft holds **raw input strings**, not a partially-typed `Entry`.
+ *
+ * This is deliberate and it is what makes "no data loss" actually true. Storing
+ * `durationMin?: number` would mean a half-typed "4" survives and a mistyped
+ * "4o" is silently dropped at exactly the moment the user is most likely to be
+ * interrupted. A draft is the state of a form, not a partial record, so it is
+ * stored as one.
+ *
+ * The caps are generous — real validation lives in the form — but bounded, so a
+ * paste of a large document can't fill the user's storage quota.
  */
+export const draftValuesSchema = z.object({
+  activity: z.string().max(200).catch(""),
+  date: z.string().max(40).catch(""),
+  durationMin: z.string().max(20).catch(""),
+  distanceKm: z.string().max(20).catch(""),
+  notes: z.string().max(2000).catch(""),
+});
+export type DraftValues = z.infer<typeof draftValuesSchema>;
+
+export const EMPTY_DRAFT_VALUES: DraftValues = {
+  activity: "",
+  date: "",
+  durationMin: "",
+  distanceKm: "",
+  notes: "",
+};
+
 export const entryDraftSchema = z.object({
   id: z.string().min(1),
   step: z.number().int().min(0),
-  date: isoDateSchema.optional(),
-  activity: z.string().max(80).optional(),
-  durationMin: z.number().int().nonnegative().max(24 * 60).optional(),
-  distanceKm: z.number().nonnegative().max(1000).optional(),
-  notes: z.string().max(500).optional(),
+  values: draftValuesSchema,
   updatedAt: z.number().int().positive(),
 });
 export type EntryDraft = z.infer<typeof entryDraftSchema>;

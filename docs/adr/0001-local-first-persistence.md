@@ -74,6 +74,30 @@ knows that IndexedDB exists. Three implementations are anticipated: `IndexedDbRe
   file's worth of indirection now, and it's the difference between "chose local storage" and
   "designed for a storage swap" when someone reads the repo.
 
+## Amendment — 2026-07-28, after implementing #15/#16
+
+**Atomicity was necessary but not sufficient for risk R3.** This ADR claimed that
+sharing one transaction between the draft-clear and the entry-commit made the
+"resurrected draft" bug fixable. It made one half of it fixable.
+
+The other half never touches the repository. The form autosaves on a debounce, so
+the click that advances to the review step schedules a write ~400ms out. Commit
+deletes the draft; that pending write then lands and re-creates it. The user
+returns to the form and is offered "we restored your unsaved session" — holding
+the session they already saved. Log it twice.
+
+No amount of transactional care inside `Repository` prevents this, because the
+stale write originates in the client and arrives *after* the transaction
+committed, entirely legitimately as far as storage is concerned. The fix is to
+cancel the pending autosave before committing (`cancelPendingSave()`), so the
+write never happens.
+
+Worth stating because the original framing was subtly wrong in a way that would
+have read as "solved": **the interface can make an operation atomic, but it
+cannot make a caller stop talking.** Any debounced writer needs an explicit
+cancel alongside its flush, and the regression test has to wait past the debounce
+window — checking immediately after the save passes either way.
+
 ## Alternatives considered
 
 **Postgres + Prisma + auth (e.g. Neon + Auth.js).** The "real" answer, and the wrong one

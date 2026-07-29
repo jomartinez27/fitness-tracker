@@ -15,6 +15,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Build output — `storybook build` emits bundled vendor code that would
+    // otherwise drown real findings in ~14k warnings.
+    "storybook-static/**",
+    "coverage/**",
   ]),
   ...storybook.configs["flat/recommended"]
 ]);
