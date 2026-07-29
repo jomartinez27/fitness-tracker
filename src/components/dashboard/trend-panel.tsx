@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   METRIC_META,
   metricSchema,
@@ -34,6 +34,10 @@ export function TrendPanel() {
   const tMetric = useTranslations("metric");
   const tDashboard = useTranslations("dashboard");
   const copy = useTrendChartCopy();
+  // Translating the chart's words is only half the job: without this its axis
+  // ticks, tooltip dates and the accessible table stay in English conventions
+  // ("Jul 28", "8.2") while everything around them is Spanish.
+  const locale = useLocale();
 
   const [range, setRange] = useState<TrendRange>("30d");
   const [metric, setMetric] = useState<Metric>("distanceKm");
@@ -140,6 +144,7 @@ export function TrendPanel() {
         status={status}
         onRetry={retry}
         hasAnyData={loaded?.hasAnyData ?? true}
+        locale={locale}
         copy={copy}
       />
     </div>

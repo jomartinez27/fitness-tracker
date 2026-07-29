@@ -1,0 +1,160 @@
+{
+  "app": {
+    "name": "Registro de entrenamiento",
+    "tagline": "Registra una sesión sin pelearte con un formulario.",
+    "skipToContent": "Saltar al contenido principal",
+    "nav": {
+      "label": "Principal",
+      "dashboard": "Tendencia",
+      "log": "Registrar sesión",
+      "describe": "Describe tu semana"
+    }
+  },
+  "language": {
+    "label": "Idioma",
+    "en": "English",
+    "es": "Español"
+  },
+  "storage": {
+    "unavailableTitle": "Los cambios no se guardarán",
+    "unavailableBody": "Este navegador está bloqueando el almacenamiento local, así que todo lo que registres desaparecerá al cerrar la pestaña. Suele deberse a la navegación privada."
+  },
+  "dashboard": {
+    "heading": "Tu tendencia",
+    "metricLabel": "Métrica",
+    "empty": {
+      "title": "Aún no has registrado nada",
+      "body": "Registra tu primera sesión y tu tendencia empezará aquí.",
+      "cta": "Registrar sesión"
+    }
+  },
+  "chart": {
+    "distanceTitle": "Distancia",
+    "distanceDescription": "Kilómetros por día",
+    "durationTitle": "Duración",
+    "durationDescription": "Minutos por día",
+    "sessionsTitle": "Sesiones",
+    "sessionsDescription": "Sesiones por día",
+    "rangeGroupLabel": "Periodo",
+    "range7d": "7 días",
+    "range30d": "30 días",
+    "range90d": "90 días",
+    "emptyNoDataTitle": "Aún no hay sesiones registradas",
+    "emptyNoDataBody": "Registra tu primera sesión y tu tendencia empezará a construirse aquí.",
+    "emptyInRangeTitle": "Nada en este periodo",
+    "emptyInRangeBody": "Tienes sesiones registradas, pero ninguna en esta ventana. Prueba con un periodo más largo.",
+    "errorTitle": "No pudimos cargar tu tendencia",
+    "errorBody": "Tus datos están a salvo: es un problema de visualización, no una sesión perdida.",
+    "retry": "Reintentar",
+    "loading": "Cargando tu tendencia",
+    "tableCaption": "datos de las sesiones en forma de tabla",
+    "columnDate": "Fecha",
+    "columnValue": "Total",
+    "goal": "Objetivo {target}",
+    "summaryWithGoal": "{points} días mostrados. Total {total}, con una media de {average} al día. El objetivo es {goal} al día.",
+    "summary": "{points} días mostrados. Total {total}, con una media de {average} al día."
+  },
+  "metric": {
+    "distanceKm": "Distancia",
+    "durationMin": "Duración",
+    "sessions": "Sesiones"
+  },
+  "describe": {
+    "heading": "Describe tu semana",
+    "intro": "Escribe lo que hiciste con tus palabras. Lo convertiremos en sesiones para que las revises antes de guardar nada.",
+    "inputLabel": "¿Qué hiciste?",
+    "placeholder": "corrí 5k, 30 min de yoga, una hora en bici el sábado",
+    "submit": "Extraer sesiones",
+    "reading": "Leyendo tu semana…",
+    "cancel": "Cancelar",
+    "startOver": "Empezar de nuevo",
+    "charactersLeft": "Quedan {count} caracteres",
+    "results": {
+      "heading": "{count, plural, =0 {No encontramos ninguna sesión} one {Encontramos una sesión} other {Encontramos # sesiones}}",
+      "none": "No encontramos ninguna sesión en ese texto. Prueba a indicar la actividad y cuánto duró; por ejemplo, «corrí 5k» o «45 min de fuerza».",
+      "reviewNote": "Revísalas: no se guarda nada hasta que tú lo digas.",
+      "save": "Guardar {count, plural, one {# sesión} other {# sesiones}}",
+      "saving": "Guardando…",
+      "include": "Incluir esta sesión",
+      "estimated": "estimado",
+      "estimatedExplanation": "Lo dedujimos nosotros, no lo leímos en tu texto.",
+      "assumedDate": "hoy, supuesto"
+    },
+    "source": {
+      "fallbackLabel": "Procesado en tu dispositivo",
+      "fallbackExplanation": "El asistente no estaba disponible, así que usamos el analizador integrado. Es más sencillo, así que revisa los resultados con algo más de atención."
+    },
+    "errors": {
+      "networkTitle": "No pudimos contactar con el asistente",
+      "networkBody": "Comprueba tu conexión e inténtalo de nuevo: no se ha perdido nada de lo que escribiste.",
+      "rateLimitedTitle": "Son muchas peticiones seguidas",
+      "rateLimitedBody": "Espera unos {seconds} segundos e inténtalo de nuevo.",
+      "tooLongTitle": "Es demasiado largo para procesarlo",
+      "tooLongBody": "Acórtalo e inténtalo de nuevo; unas pocas frases funcionan mejor.",
+      "unknownTitle": "Algo ha salido mal",
+      "unknownBody": "No se ha perdido nada de lo que escribiste. Inténtalo de nuevo cuando quieras.",
+      "retry": "Reintentar"
+    },
+    "saved": {
+      "title": "{count, plural, one {# sesión guardada} other {# sesiones guardadas}}",
+      "body": "Ya están en tu tendencia.",
+      "again": "Describir otra semana",
+      "failedTitle": "No pudimos guardar esas sesiones",
+      "failedBody": "No se ha perdido nada: siguen aquí. Inténtalo de nuevo cuando quieras."
+    }
+  },
+  "entry": {
+    "heading": "Registrar sesión",
+    "stepProgress": "Paso {current} de {total}",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "submit": "Guardar sesión",
+    "saving": "Guardando…",
+    "draftRestored": "Hemos recuperado tu sesión sin guardar.",
+    "discardDraft": "Empezar de nuevo",
+    "steps": {
+      "whatLabel": "¿Qué hiciste?",
+      "whenLabel": "¿Cuándo?",
+      "effortLabel": "¿Cuánto?",
+      "notesLabel": "¿Algo que anotar?"
+    },
+    "fields": {
+      "activity": "Actividad",
+      "activityHint": "Por ejemplo: Correr, Yoga, Fuerza",
+      "date": "Fecha",
+      "durationMin": "Duración",
+      "durationUnit": "minutos",
+      "distanceKm": "Distancia",
+      "distanceUnit": "kilómetros",
+      "distanceOptional": "Opcional: déjalo en blanco para actividades que no se miden en distancia",
+      "notes": "Notas",
+      "notesOptional": "Opcional"
+    },
+    "errors": {
+      "summaryTitle": "Corrige esto antes de continuar",
+      "activityRequired": "Ponle un nombre a la sesión para reconocerla más adelante.",
+      "activityTooLong": "Usa menos de 80 caracteres.",
+      "dateRequired": "Elige el día en que hiciste la sesión.",
+      "dateInFuture": "Esa fecha está en el futuro.",
+      "durationRequired": "Indica cuánto duró la sesión.",
+      "durationInvalid": "Escribe un número entero de minutos.",
+      "durationTooLong": "Eso dura más de un día.",
+      "distanceInvalid": "Escribe una distancia como 5 o 5,2.",
+      "notesTooLong": "Usa menos de 500 caracteres."
+    },
+    "review": {
+      "heading": "Listo para guardar",
+      "editStep": "Editar"
+    },
+    "success": {
+      "title": "Sesión guardada",
+      "body": "Ya está en tu tendencia.",
+      "another": "Registrar otra"
+    },
+    "failure": {
+      "title": "No pudimos guardar esa sesión",
+      "body": "No se ha perdido nada: tu entrada sigue aquí. Inténtalo de nuevo cuando quieras.",
+      "retry": "Reintentar"
+    }
+  }
+}

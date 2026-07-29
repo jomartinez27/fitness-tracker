@@ -10,6 +10,11 @@
       "describe": "Describe your week"
     }
   },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "es": "Español"
+  },
   "storage": {
     "unavailableTitle": "Changes won't be saved",
     "unavailableBody": "This browser is blocking local storage, so anything you log will disappear when you close the tab. Private browsing is the usual cause."

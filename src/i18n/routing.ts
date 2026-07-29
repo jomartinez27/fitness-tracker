@@ -1,15 +1,14 @@
 import { defineRouting } from "next-intl/routing";
 
 /**
- * Locale-routed URLs from v0, with only English shipped.
+ * Locale-routed URLs, English and Spanish.
  *
- * `es` is deliberately absent until its catalogue exists (#24) — declaring a
- * locale we can't serve would route real users to a half-translated page.
- * Adding it is one entry here plus a message file, which is the whole point of
- * paying the routing cost up front rather than retrofitting it.
+ * Adding `es` was one entry here plus a message file — which is exactly what
+ * paying the routing cost up front in v0 bought. Retrofitting locale segments
+ * into a finished app is the expensive version of this change.
  */
 export const routing = defineRouting({
-  locales: ["en"],
+  locales: ["en", "es"],
   defaultLocale: "en",
   localePrefix: "always",
 });
