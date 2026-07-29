@@ -1,15 +1,22 @@
 # Training tracker
 
+**[Live demo →](https://fitness-tracker-jomar2.vercel.app/)**
+
 An AI-native training tracker. Log a workout without fighting a form, see whether you're
 actually trending toward your goal, and — if you'd rather not use a form at all — just type
 what you did and let the app structure it.
+
+No signup, no empty state: the demo seeds ninety days of training on first visit, so the
+chart has something to say immediately. That's the payoff of the local-first decision in
+[ADR-0001](docs/adr/0001-local-first-persistence.md).
 
 Built as a portfolio piece for senior/lead frontend work, which means the reasoning is part
 of the deliverable: see [`docs/design.md`](docs/design.md) for goals, non-goals, rejected
 alternatives, risks, and the phased rollout, and [`docs/adr/`](docs/adr/) for the decisions
 that were load-bearing enough to write down.
 
-> **Status:** Phase 0 (design + backlog). No application code yet — by design.
+> **Status:** v0 shipped — chart, app shell, entry flow, deployed with the AI flag off.
+> v1 (streamed AI extraction, ES locale) is next.
 
 ## The three pillars
 
@@ -62,9 +69,9 @@ Copy `.env.example` to `.env.local`:
 | `npm run dev` | Dev server |
 | `npm run build` | Production build |
 | `npm run lint` | ESLint |
-| `npm run test` | Vitest _(added in Phase 1)_ |
-| `npm run test:e2e` | Playwright _(added in v1)_ |
-| `npm run storybook` | Storybook _(added in Phase 1)_ |
+| `npm run test` | Vitest — unit tests, plus stories run in Chromium with axe |
+| `npm run test:e2e` | Playwright — critical paths on desktop and mobile |
+| `npm run storybook` | Storybook |
 
 ## Project docs
 
@@ -76,10 +83,13 @@ Copy `.env.example` to `.env.local`:
 
 ## Build phases
 
-- **Phase 0** — design doc, ADRs, backlog. _(current)_
-- **Phase 1** — trend chart in isolation: Storybook stories + Vitest tests + all four states.
-- **Phase 2** — app shell: entry flow + dashboard consuming the chart.
-- **Phase 3** — the AI route: streaming, structured extraction, full error/retry UX.
+- **Phase 0** — design doc, ADRs, backlog. ✅
+- **Phase 1** — trend chart in isolation: Storybook stories + Vitest tests + all four states. ✅
+- **Phase 2** — app shell: entry flow + dashboard consuming the chart. ✅
+- **Phase 3** — the AI route: streaming, structured extraction, full error/retry UX. _(next)_
+
+Progress is tracked as [milestones and issues](https://github.com/jomartinez27/fitness-tracker/issues),
+with the reasoning for the sequencing in [`docs/backlog.md`](docs/backlog.md).
 
 ## Known limitations
 
