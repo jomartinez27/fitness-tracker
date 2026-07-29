@@ -36,7 +36,7 @@ module that constructs an SDK client. Model is `ANTHROPIC_MODEL`, defaulting to
 
 | Layer | Control |
 |---|---|
-| Kill switch | `NEXT_PUBLIC_FEATURE_AI=false` hides the UI; the route independently checks the server-side flag and 404s |
+| Kill switch | `NEXT_PUBLIC_FEATURE_AI=false` hides the UI; the route independently checks its own server-side flag and answers from the local extractor (see the amendment below) |
 | Rate limit | Per-IP token bucket, small burst, low sustained rate; on trip → mock, not an error |
 | Input cap | Request body length capped before the model call |
 | Output cap | `max_tokens` bounded per request |
@@ -88,6 +88,44 @@ with a quieter result.
   the backlog rather than pretended away.
 - **Extra latency vs. calling the API directly from the client** — a hop through our server.
   Irrelevant next to model latency, and non-negotiable given the key.
+
+## Amendment — 2026-07-28, while implementing #21
+
+**1. The kill switch falls back; it does not 404.** As written, this ADR
+contradicted itself: the controls table said the route "404s" when the flag is
+off, while the fallback section said the local extractor answers "whenever the
+flag is off". Both cannot be true.
+
+Resolved in favour of the fallback. The purpose of the switch is to stop
+*spend*, not to remove the feature, and a 404 breaks the UI to achieve something
+the fallback achieves without breaking it. The whole design principle here is
+degrade rather than fail; a kill switch that violates it is the wrong switch.
+Flag off therefore means: no upstream call, no cost, endpoint still answers,
+result labelled `ai-fallback`.
+
+**2. The Vercel duration limit is not the constraint I assumed.** Hobby
+functions default *and* cap at 300s with fluid compute, so a streamed
+extraction is nowhere near it.
+
+The timeout still matters, for a different reason: **which timeout fires first**.
+If the platform kills the function, the client gets a severed connection and has
+to infer what happened. If ours fires, we abort the upstream call and stream a
+clean, labelled fallback. So the route sets `maxDuration = 30` and aborts
+upstream at 20s — both far below the platform ceiling, chosen so the failure is
+ours to handle rather than the platform's to inflict.
+
+**3. Two channels, implemented with tool use.** The ADR described the design but
+not the mechanism. The model writes its acknowledgement as ordinary text
+(streamable token by token) and returns sessions as a `tool_use` block whose
+input is read once, whole, at the end. This is what makes the two-channel claim
+real rather than aspirational — there is no point at which anything parses a
+partial JSON object.
+
+**4. The route guarantees exactly one terminal event.** A stream that ends after
+prose without ever calling the tool throws nothing and looks like success, so a
+fallback that only runs in `catch` leaves the client waiting forever for data
+that is never coming. The guarantee lives in `finally`, keyed on whether an
+`entries` event was actually delivered.
 
 ## Alternatives considered
 
