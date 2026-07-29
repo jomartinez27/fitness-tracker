@@ -2,10 +2,14 @@
 
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
+import { publicFlags } from "@/lib/flags";
 
 const NAV = [
   { href: "/", key: "dashboard" },
   { href: "/log", key: "log" },
+  // Only linked when the AI feature is on; the page itself 404s otherwise, so
+  // the two cannot drift out of step.
+  ...(publicFlags.ai ? ([{ href: "/describe", key: "describe" }] as const) : []),
 ] as const;
 
 export function SiteHeader() {

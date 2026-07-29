@@ -6,7 +6,8 @@
     "nav": {
       "label": "Main",
       "dashboard": "Trend",
-      "log": "Log a session"
+      "log": "Log a session",
+      "describe": "Describe your week"
     }
   },
   "storage": {
@@ -52,6 +53,50 @@
     "distanceKm": "Distance",
     "durationMin": "Duration",
     "sessions": "Sessions"
+  },
+  "describe": {
+    "heading": "Describe your week",
+    "intro": "Type what you did in your own words. We'll turn it into sessions for you to check before anything is saved.",
+    "inputLabel": "What did you do?",
+    "placeholder": "ran 5k, 30 min yoga, cycled an hour on Saturday",
+    "submit": "Extract sessions",
+    "reading": "Reading your week…",
+    "cancel": "Cancel",
+    "startOver": "Start over",
+    "charactersLeft": "{count} characters left",
+    "results": {
+      "heading": "Found {count, plural, =0 {no sessions} one {one session} other {# sessions}}",
+      "none": "We couldn't find any sessions in that. Try naming the activity and how long it took — for example \"ran 5k\" or \"45 min strength\".",
+      "reviewNote": "Check these over — nothing is saved until you say so.",
+      "save": "Save {count, plural, one {# session} other {# sessions}}",
+      "saving": "Saving…",
+      "include": "Include this session",
+      "estimated": "estimated",
+      "estimatedExplanation": "We worked this out rather than reading it from your text.",
+      "assumedDate": "assumed today"
+    },
+    "source": {
+      "fallbackLabel": "Parsed on your device",
+      "fallbackExplanation": "The assistant wasn't available, so we used the built-in parser. It's simpler, so check the results a little more carefully."
+    },
+    "errors": {
+      "networkTitle": "Couldn't reach the assistant",
+      "networkBody": "Check your connection and try again — nothing you typed was lost.",
+      "rateLimitedTitle": "That's a lot of requests",
+      "rateLimitedBody": "Give it about {seconds} seconds and try again.",
+      "tooLongTitle": "That's too long to read",
+      "tooLongBody": "Trim it down and try again — a few sentences works best.",
+      "unknownTitle": "Something went wrong",
+      "unknownBody": "Nothing you typed was lost. Try again when you're ready.",
+      "retry": "Try again"
+    },
+    "saved": {
+      "title": "{count, plural, one {# session} other {# sessions}} saved",
+      "body": "They're on your trend now.",
+      "again": "Describe another week",
+      "failedTitle": "Couldn't save those sessions",
+      "failedBody": "Nothing was lost — they're still here. Try again when you're ready."
+    }
   },
   "entry": {
     "heading": "Log a session",
